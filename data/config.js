@@ -29,10 +29,10 @@ window.SITE = {
 
   // الأقسام (تُعرَّف مرة واحدة وتُستعمل في كل السنوات)
   classes: [
-    { id: "2as-se", module: "math",  level: "السنة الثانية ثانوي", stream: "علوم تجريبية",              subject: "رياضيات",   color: "#2563eb", color2: "#7c3aed" },
-    { id: "2as-lph", module: "math", level: "السنة الثانية ثانوي", stream: "آداب وفلسفة",              subject: "رياضيات",   color: "#9333ea", color2: "#db2777" },
-    { id: "1as-l", module: "math",   level: "السنة الأولى ثانوي",  stream: "جذع مشترك آداب",            subject: "رياضيات",   color: "#ea580c", color2: "#e11d48" },
-    { id: "1as-st", module: "info",  level: "السنة الأولى ثانوي",  stream: "جذع مشترك علوم وتكنولوجيا", subject: "إعلام آلي", color: "#0d9488", color2: "#0284c7" }
+    { id: "2as-se", module: "math",  level: "السنة الثانية ثانوي", stream: "علوم تجريبية",              subject: "رياضيات",   color: "#1e3a8a", color2: "#1d4ed8" },
+    { id: "2as-lph", module: "math", level: "السنة الثانية ثانوي", stream: "آداب وفلسفة",              subject: "رياضيات",   color: "#5b1a36", color2: "#8a2850" },
+    { id: "1as-l", module: "math",   level: "السنة الأولى ثانوي",  stream: "جذع مشترك آداب",            subject: "رياضيات",   color: "#14532d", color2: "#1f7a46" },
+    { id: "1as-st", module: "info",  level: "السنة الأولى ثانوي",  stream: "جذع مشترك علوم وتكنولوجيا", subject: "إعلام آلي", color: "#134e4a", color2: "#0f766e" }
   ],
 
   // السنوات الدراسية — الأحدث أولاً
