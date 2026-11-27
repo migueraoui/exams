@@ -91,12 +91,6 @@
   }
 
   /* ---------- Views ---------- */
-  function viewHome() {
-    document.title = S.title;
-    return "<h1>" + esc(S.title) + "</h1>" +
-      '<p class="lead">لعرض موضوع الاختبار وتصحيحه، افتح الرابط الذي أرسله لك الأستاذ.</p>';
-  }
-
   function viewClass(year, cid) {
     var c = CLASSES[cid];
     var groups = {};
@@ -158,6 +152,34 @@
       '<p class="lead">الرابط غير صحيح. تأكّد من الرابط الذي أرسله لك الأستاذ.</p>';
   }
 
+  /* ---------- Floating symbols background ---------- */
+  var SYMBOLS = {
+    math: ["∑", "π", "√", "∫", "∞", "Δ", "÷", "×", "≈", "θ", "f(x)", "x²", "%", "≠", "α", "±", "λ", "∈"],
+    info: ["</>", "{ }", "01", "10", "#", "if", "()", ";", "[ ]", "=>", "&&", "0x", "≠", "<>", "1", "0", "fn", "//"]
+  };
+  var bg = document.createElement("div");
+  bg.className = "bg-sym";
+  bg.setAttribute("aria-hidden", "true");
+  document.body.insertBefore(bg, document.body.firstChild);
+  var bgMod = null;
+
+  function symbols(mod) {
+    if (mod === bgMod) return;
+    bgMod = mod;
+    var set = SYMBOLS[mod] || SYMBOLS.math;
+    var n = window.innerWidth < 640 ? 14 : 24;
+    var h = "";
+    for (var i = 0; i < n; i++) {
+      var size = 18 + Math.round(Math.random() * 30);
+      h += '<span style="left:' + (Math.random() * 96).toFixed(1) + "%;font-size:" + size + "px;" +
+        "animation-duration:" + (22 + Math.random() * 26).toFixed(1) + "s;" +
+        "animation-delay:-" + (Math.random() * 40).toFixed(1) + "s;" +
+        "--r:" + (Math.random() < .5 ? -1 : 1) * (20 + Math.round(Math.random() * 40)) + 'deg">' +
+        esc(set[i % set.length]) + "</span>";
+    }
+    bg.innerHTML = h;
+  }
+
   /* ---------- Router ---------- */
   function parse() {
     return location.hash.replace(/^#\/?/, "").split("/").filter(Boolean).map(function (p) {
@@ -167,19 +189,20 @@
 
   function render() {
     var p = parse();
-    var year = getYear(p[0] || S.currentYear);
-    var html;
+    var year = getYear(p[0]);
+    var html, mod = "math";
 
-    if (!year) html = notFound();
-    else if (!p[1]) html = viewHome();
-    else if (!CLASSES[p[1]] || !year.classes[p[1]]) html = notFound();
+    // No home page: only a full class link (year/class/...) shows anything.
+    if (!year || !p[1] || !CLASSES[p[1]] || !year.classes[p[1]]) html = notFound();
     else if (!p[2]) html = viewClass(year, p[1]);
     else {
       var exam = findExam(year, p[1], p[2], p[3], p[4]);
       html = exam ? viewExam(year, p[1], exam) : notFound();
     }
 
-    app.innerHTML = html;
+    if (year && CLASSES[p[1]]) mod = CLASSES[p[1]].module;
+    symbols(mod);
+    app.innerHTML = '<div class="enter">' + html + "</div>";
     window.scrollTo(0, 0);
   }
 
