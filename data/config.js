@@ -12,6 +12,12 @@
  *        { label: "الصفحة 1", href: "files/.../p1.jpg" },
  *        { label: "الصفحة 2", href: "files/.../p2.jpg" }
  *      ]
+ *
+ *  • رابط كل اختبار يُبنى تلقائياً:  #/السنة/القسم/المادة/fasl-رقم_الفصل
+ *      مثال:  #/2026-2027/2as-se/math/fasl-1
+ *    لاختبار إضافي في نفس الفصل (فرض مثلاً) أعطه id آخر:
+ *      { id: "fard-1", term: 1, title: "الفرض الأول", ... }
+ *      ← الرابط:  #/2026-2027/2as-se/math/fasl-1/fard-1
  */
 
 window.SITE = {
@@ -22,10 +28,10 @@ window.SITE = {
 
   // الأقسام (تُعرَّف مرة واحدة وتُستعمل في كل السنوات)
   classes: [
-    { id: "2as-se",  level: "السنة الثانية ثانوي", stream: "علوم تجريبية",              subject: "رياضيات",   color: "#2563eb" },
-    { id: "2as-lph", level: "السنة الثانية ثانوي", stream: "آداب وفلسفة",              subject: "رياضيات",   color: "#9333ea" },
-    { id: "1as-l",   level: "السنة الأولى ثانوي",  stream: "جذع مشترك آداب",            subject: "رياضيات",   color: "#ea580c" },
-    { id: "1as-st",  level: "السنة الأولى ثانوي",  stream: "جذع مشترك علوم وتكنولوجيا", subject: "إعلام آلي", color: "#0d9488" }
+    { id: "2as-se", module: "math",  level: "السنة الثانية ثانوي", stream: "علوم تجريبية",              subject: "رياضيات",   color: "#2563eb" },
+    { id: "2as-lph", module: "math", level: "السنة الثانية ثانوي", stream: "آداب وفلسفة",              subject: "رياضيات",   color: "#9333ea" },
+    { id: "1as-l", module: "math",   level: "السنة الأولى ثانوي",  stream: "جذع مشترك آداب",            subject: "رياضيات",   color: "#ea580c" },
+    { id: "1as-st", module: "info",  level: "السنة الأولى ثانوي",  stream: "جذع مشترك علوم وتكنولوجيا", subject: "إعلام آلي", color: "#0d9488" }
   ],
 
   // السنوات الدراسية — الأحدث أولاً
@@ -34,16 +40,16 @@ window.SITE = {
       id: "2026-2027",
       classes: {
         "2as-se": [
-          { id: "t1-exam", term: 1, title: "اختبار الفصل الأول", date: "", subject: null, solution: null }
+          { id: "exam", term: 1, title: "اختبار الفصل الأول", date: "", subject: null, solution: null }
         ],
         "2as-lph": [
-          { id: "t1-exam", term: 1, title: "اختبار الفصل الأول", date: "", subject: null, solution: null }
+          { id: "exam", term: 1, title: "اختبار الفصل الأول", date: "", subject: null, solution: null }
         ],
         "1as-l": [
-          { id: "t1-exam", term: 1, title: "اختبار الفصل الأول", date: "", subject: null, solution: null }
+          { id: "exam", term: 1, title: "اختبار الفصل الأول", date: "", subject: null, solution: null }
         ],
         "1as-st": [
-          { id: "t1-exam", term: 1, title: "اختبار الفصل الأول", date: "", subject: null, solution: null }
+          { id: "exam", term: 1, title: "اختبار الفصل الأول", date: "", subject: null, solution: null }
         ]
       }
     }

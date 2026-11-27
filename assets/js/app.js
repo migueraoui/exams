@@ -39,6 +39,22 @@
   function getYear(id) { return S.years.filter(function (y) { return y.id === id; })[0]; }
   function href() { return "#/" + Array.prototype.map.call(arguments, encodeURIComponent).join("/"); }
   function classIcon(c) { return /إعلام/.test(c.subject) ? I.computer : I.math; }
+  function moduleOf(c, e) { return (e && e.module) || c.module; }
+  function examHref(yid, cid, e) {
+    var parts = [yid, cid, moduleOf(CLASSES[cid], e), "fasl-" + (e.term || 1)];
+    if (e.id && e.id !== "exam") parts.push(e.id);
+    return href.apply(null, parts);
+  }
+  function findExam(year, cid, mod, fasl, id) {
+    var m = /^fasl-(\d)$/.exec(fasl || "");
+    if (!m) return null;
+    var c = CLASSES[cid];
+    var list = (year.classes[cid] || []).filter(function (e) {
+      return moduleOf(c, e) === mod && String(e.term || 1) === m[1];
+    });
+    if (id) return list.filter(function (e) { return e.id === id; })[0] || null;
+    return list.filter(function (e) { return !e.id || e.id === "exam"; })[0] || list[0] || null;
+  }
   function className(c) { return c.level + " — " + c.stream; }
 
   function files(v) {
@@ -143,7 +159,7 @@
     var list = termKeys.map(function (t) {
       return '<section class="term"><h2 class="term-title">' + esc(TERMS[t] || "أخرى") + '</h2><div class="exam-list">' +
         groups[t].map(function (e) {
-          return '<a class="card exam-row" href="' + href(year.id, cid, e.id) + '">' +
+          return '<a class="card exam-row" href="' + examHref(year.id, cid, e) + '">' +
             '<span class="ic" aria-hidden="true">' + I.file + "</span>" +
             '<span class="body"><h3>' + esc(e.title) + "</h3>" +
             '<span class="class-meta">' + statusChips(e) + (e.date ? '<span class="date">' + esc(fmtDate(e.date)) + "</span>" : "") + "</span></span>" +
@@ -229,7 +245,7 @@
     else if (!CLASSES[p[1]] || !year.classes[p[1]]) html = notFound();
     else if (!p[2]) html = viewClass(year, p[1]);
     else {
-      var exam = year.classes[p[1]].filter(function (e) { return e.id === p[2]; })[0];
+      var exam = findExam(year, p[1], p[2], p[3], p[4]);
       html = exam ? viewExam(year, p[1], exam) : notFound();
     }
 
