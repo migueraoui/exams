@@ -14,8 +14,8 @@
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
     });
   }
-  // Arabic reading order: first year on the right → reads «2026 / 2027»
-  function yearLabel(id) { var y = String(id).split("-"); return "\u2067" + y[0] + "\u00a0\u200f/\u200f\u00a0" + y[1] + "\u2069"; }
+  // Year shown left-to-right everywhere: «2026 / 2027» (2026 first, on the left)
+  function yearLabel(id) { var y = String(id).split("-"); return "\u2066" + y[0] + "\u00a0/\u00a0" + y[1] + "\u2069"; }
   function getYear(id) { return S.years.filter(function (y) { return y.id === id; })[0]; }
   function href() { return "#/" + Array.prototype.map.call(arguments, encodeURIComponent).join("/"); }
 
