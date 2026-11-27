@@ -178,7 +178,7 @@
     document.title = exam.title + " — " + c.stream;
     var meta = [c.level + " — " + c.stream, "مادة " + c.subject];
     meta.push(exam.date ? fmtDate(exam.date) : yearLabel(year.id));
-    return '<p class="back"><a href="' + href(year.id, cid) + '">\u200f→ العودة إلى كل اختبارات القسم</a></p>' +
+    return '<p class="back"><a href="' + href(year.id, cid) + '">العودة إلى كل اختبارات القسم</a></p>' +
       hero(c, esc(exam.title), meta.map(esc).join(" · ") + (exam.date ? " " + countdown(exam.date) : "")) +
       docSection("subject", exam) + docSection("solution", exam) +
       (exam.note ? '<p class="note">' + esc(exam.note) + "</p>" : "") +
