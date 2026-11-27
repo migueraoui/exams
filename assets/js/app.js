@@ -7,7 +7,6 @@
   S.classes.forEach(function (c) { CLASSES[c.id] = c; });
 
   var TERMS = { 1: "الفصل الأول", 2: "الفصل الثاني", 3: "الفصل الثالث" };
-  var IS_MOBILE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
   /* ---------- Helpers ---------- */
   function esc(s) {
@@ -94,34 +93,12 @@
   }
 
   var shareTitle = "";
-  function nativeShare() {
+  function share() {
     if (navigator.share) {
       navigator.share({ title: shareTitle, text: shareTitle, url: location.href }).catch(function () {});
     } else {
-      var s = document.getElementById("share");
-      if (s) s.scrollIntoView({ behavior: "smooth", block: "center" });
+      copyLink(location.href);
     }
-  }
-
-  function shareBox(title) {
-    shareTitle = title;
-    var url = location.href;
-    var u = encodeURIComponent(url);
-    var msg = encodeURIComponent(title + "\n" + url);
-    var b = "";
-    b += '<a class="sb wa" href="https://wa.me/?text=' + msg + '" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i>واتساب</a>';
-    b += '<a class="sb fb" href="https://www.facebook.com/sharer/sharer.php?u=' + u + '" target="_blank" rel="noopener"><i class="fa-brands fa-facebook-f"></i>فيسبوك</a>';
-    if (IS_MOBILE) b += '<a class="sb ms" href="fb-messenger://share/?link=' + u + '"><i class="fa-brands fa-facebook-messenger"></i>ماسنجر</a>';
-    b += '<a class="sb tg" href="https://t.me/share/url?url=' + u + "&text=" + encodeURIComponent(title) + '" target="_blank" rel="noopener"><i class="fa-brands fa-telegram"></i>تيليغرام</a>';
-    b += '<button type="button" class="sb cp" data-copy><i class="fa-solid fa-link"></i>نسخ الرابط</button>';
-    if (navigator.share) b += '<button type="button" class="sb more" data-share><i class="fa-solid fa-share-nodes"></i>المزيد</button>';
-
-    return '<section class="share" id="share">' +
-      '<div class="share-head"><span class="ic"><i class="fa-solid fa-share-nodes"></i></span>' +
-      "<div><h2>شارك الرابط مع زملائك</h2><p>أرسل هذه الصفحة لزملائك في القسم بنقرة واحدة</p></div></div>" +
-      '<div class="share-btns">' + b + "</div>" +
-      '<div class="share-url"><input type="text" readonly value="' + esc(url) + '" aria-label="رابط الصفحة">' +
-      '<button type="button" data-copy>نسخ</button></div></section>';
   }
 
   /* ---------- Hero ---------- */
@@ -142,31 +119,15 @@
     return '<div class="hero-sym" aria-hidden="true">' + h + "</div>";
   }
 
-  function art(mod) {
-    if (mod === "info") {
-      return '<div class="art term-art" aria-hidden="true" dir="ltr">' +
-        '<div class="term-bar"><i></i><i></i><i></i></div>' +
-        '<div class="term-body"><div class="l l1"><span class="p">&gt;</span> python exam.py</div>' +
-        '<div class="l l2">Loading<span class="dots"></span></div>' +
-        '<div class="l l3" dir="rtl">✓ بالتوفيق للجميع</div><span class="cur"></span></div></div>';
-    }
-    return '<svg class="art math-art" viewBox="0 0 220 120" aria-hidden="true">' +
-      '<path class="ax" d="M10 60H212M110 8V114M40 57v6M75 57v6M145 57v6M180 57v6M107 25h6M107 95h6"/>' +
-      '<path id="curve" class="curve" d="M10 60 C 27 15, 43 15, 60 60 S 93 105, 110 60 S 143 15, 160 60 S 193 105, 210 60"/>' +
-      '<path class="curve2" d="M30 112 Q 110 -40 190 112"/>' +
-      '<circle class="dot" r="5"><animateMotion dur="6s" repeatCount="indefinite"><mpath href="#curve"/></animateMotion></circle>' +
-      '<text x="200" y="78">x</text><text x="117" y="16">y</text></svg>';
-  }
-
   function hero(c, opts) {
     return '<section class="hero">' + symbols(c.module) +
       '<div class="hero-top"><span class="site-name"><span class="logo">' + (c.module === "info" ? "&lt;/&gt;" : "∑") + "</span>" + esc(S.title) + "</span>" +
-      '<button type="button" class="pill-btn" data-share><i class="fa-solid fa-share-nodes"></i>مشاركة</button></div>' +
+      '<button type="button" class="pill-btn" data-share><i class="fa-solid fa-share-nodes"></i>مشاركة الرابط</button></div>' +
       '<div class="hero-body"><div class="hero-text">' +
       '<div class="tags">' + opts.tags.map(function (t, i) { return '<span class="tag' + (i === 0 ? " light" : "") + '">' + t + "</span>"; }).join("") + "</div>" +
       "<h1>" + opts.title + "</h1>" +
       '<p class="sub">' + opts.sub + "</p>" + (opts.extra || "") +
-      "</div>" + art(c.module) + "</div></section>";
+      "</div></div></section>";
   }
 
   /* ---------- Views ---------- */
@@ -204,8 +165,7 @@
       }) +
       '<h2 class="section-title"><i class="fa-solid fa-file-pen"></i>الاختبارات</h2>' +
       (cards ? '<div class="cards">' + cards + "</div>"
-        : '<div class="empty"><i class="fa-regular fa-folder-open fa-solid"></i><h3>لا توجد اختبارات بعد</h3><p>ستظهر هنا فور نشرها.</p></div>') +
-      shareBox(shareTitle);
+        : '<div class="empty"><i class="fa-solid fa-folder-open"></i><h3>لا توجد اختبارات بعد</h3><p>ستظهر هنا فور نشرها.</p></div>');
   }
 
   function docCard(kind, exam) {
@@ -244,8 +204,7 @@
         extra: countdown(exam.date) ? "<div>" + countdown(exam.date) + "</div>" : ""
       }) +
       '<div class="docs">' + docCard("subject", exam) + docCard("solution", exam) + "</div>" +
-      (exam.note ? '<div class="note"><i class="fa-solid fa-circle-info"></i><span>' + esc(exam.note) + "</span></div>" : "") +
-      shareBox(shareTitle);
+      (exam.note ? '<div class="note"><i class="fa-solid fa-circle-info"></i><span>' + esc(exam.note) + "</span></div>" : "");
   }
 
   function notFound() {
@@ -291,9 +250,8 @@
     var b = e.target.closest("button");
     if (!b) return;
     if (b.hasAttribute("data-copy")) copyLink(location.href);
-    if (b.hasAttribute("data-share")) nativeShare();
+    if (b.hasAttribute("data-share")) share();
   });
-  app.addEventListener("focusin", function (e) { if (e.target.matches(".share-url input")) e.target.select(); });
 
   window.addEventListener("hashchange", render);
   render();
