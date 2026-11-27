@@ -159,3 +159,99 @@ h2.term:first-of-type { margin-top: 6px; }
   .enter > * { animation: none; }
 }
 @media print { .bg-sym { display: none; } }
+
+/* ================= Lively layer ================= */
+:root { --accent: #0b4f8a; }
+a { color: var(--accent); }
+a:hover { color: var(--accent); filter: brightness(.8); }
+.btn.primary { background: var(--accent); border-color: var(--accent); }
+.btn.primary:hover { background: var(--accent); filter: brightness(.88); }
+.btn { transition: transform .12s, filter .15s, background .15s; }
+.btn:active { transform: scale(.97); }
+.bg-sym span { color: var(--accent); }
+.topbar { border-bottom: 3px solid var(--accent); }
+
+/* hero with graph paper */
+.hero {
+  position: relative; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  margin: 0 0 22px; padding: 20px 20px 18px; border: 1px solid color-mix(in srgb, var(--accent) 22%, #fff);
+  border-radius: 8px; overflow: hidden;
+  background-color: color-mix(in srgb, var(--accent) 3%, #fff);
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--accent) 10%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--accent) 10%, transparent) 1px, transparent 1px);
+  background-size: 18px 18px;
+  animation: paper 30s linear infinite;
+}
+@keyframes paper { to { background-position: 0 -180px, 180px 0; } }
+.hero-text { min-width: 0; position: relative; z-index: 1; }
+.hero .meta { margin: 0; }
+.kicker {
+  display: inline-block; font-size: 13px; font-weight: 600; color: var(--accent);
+  border-bottom: 2px solid var(--accent); margin-bottom: 6px; line-height: 1.6;
+}
+.back { margin: 0 0 12px; font-size: 14.5px; }
+
+/* math illustration */
+.math-art { width: 220px; flex-shrink: 0; overflow: visible; }
+.math-art .ax { stroke: #9aa3ad; stroke-width: 1.2; fill: none; }
+.math-art .curve { fill: none; stroke: var(--accent); stroke-width: 2.4; stroke-linecap: round;
+  stroke-dasharray: 520; stroke-dashoffset: 520; animation: draw 2.4s ease-out .2s forwards; }
+.math-art .curve2 { fill: none; stroke: #d08a1e; stroke-width: 1.6; stroke-dasharray: 4 5; opacity: 0; animation: fadeIn 1s ease 1.6s forwards; }
+.math-art .dot { fill: #d08a1e; }
+.math-art text { font: italic 13px "Times New Roman", serif; fill: #7a838d; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes fadeIn { to { opacity: 1; } }
+
+/* informatics illustration */
+.term-art { width: 230px; flex-shrink: 0; background: #1f2329; border-radius: 7px; overflow: hidden;
+  font: 13px/1.7 ui-monospace, "Cascadia Mono", Consolas, monospace; color: #d7dde4; box-shadow: 0 6px 18px rgba(0,0,0,.12); }
+.term-bar { background: #2c3139; padding: 6px 9px; display: flex; gap: 5px; }
+.term-bar i { width: 9px; height: 9px; border-radius: 50%; background: #ff6058; }
+.term-bar i:nth-child(2) { background: #ffbd2e; } .term-bar i:nth-child(3) { background: #28c940; }
+.term-body { padding: 9px 12px 11px; min-height: 92px; }
+.term-body .l { white-space: nowrap; overflow: hidden; opacity: 0; }
+.term-body .p { color: #7ee787; }
+.term-body .l1 { width: 0; opacity: 1; animation: type 1.4s steps(16) .3s forwards; }
+.term-body .l2 { animation: fadeIn .2s 1.9s forwards; color: #9aa4b0; }
+.term-body .l3 { animation: fadeIn .4s 3.4s forwards; color: #7ee787; font-family: "IBM Plex Sans Arabic", sans-serif; }
+.term-body .dots::after { content: ""; animation: dots 1.2s steps(4) 1.9s 1 forwards; }
+.cur { display: inline-block; width: 8px; height: 15px; background: #d7dde4; vertical-align: -2px; animation: blink 1s steps(1) infinite; }
+@keyframes type { to { width: 16ch; } }
+@keyframes dots { 0% { content: ""; } 33% { content: "."; } 66% { content: ".."; } 100% { content: "..."; } }
+@keyframes blink { 50% { opacity: 0; } }
+
+@media (max-width: 640px) {
+  .hero { flex-direction: column; align-items: stretch; padding: 16px; }
+  .math-art { width: 100%; max-width: 260px; height: 96px; align-self: center; }
+  .term-art { width: 100%; }
+}
+
+/* status cues */
+.pulse { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #d08a1e;
+  margin-inline-end: 6px; vertical-align: 1px; animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .25; transform: scale(.7); } }
+.countdown { display: inline-block; font-size: 13px; color: #9a5b00; background: #fff4df; border-radius: 4px; padding: 0 7px; margin-inline-start: 4px; }
+h2.term { border-bottom-color: var(--accent); }
+
+.exams tbody tr { transition: background .15s; }
+.exams tbody tr:hover { background: color-mix(in srgb, var(--accent) 5%, #fff); }
+.exams .go { display: inline-block; transition: transform .2s; }
+.exams tr:hover .go { transform: translateX(-4px); }
+
+.doc { position: relative; padding-inline-start: 14px; }
+.doc::before { content: ""; position: absolute; inset-inline-start: 0; top: 20px; bottom: 20px; width: 3px; border-radius: 2px; background: #e0a43a; }
+.doc.ready::before { background: #2f9e5b; }
+.hourglass { display: inline-block; width: 12px; height: 14px; margin-inline-end: 8px; vertical-align: -2px;
+  border: 2px solid #d08a1e; border-width: 2px 0; position: relative; animation: flip 2.4s ease-in-out infinite; }
+.hourglass::before { content: ""; position: absolute; inset: 1px 1px; background: linear-gradient(#d08a1e 0 0) top/100% 45% no-repeat, linear-gradient(#d08a1e 0 0) bottom/100% 25% no-repeat; clip-path: polygon(0 0, 100% 0, 55% 50%, 100% 100%, 0 100%, 45% 50%); }
+@keyframes flip { 0%, 70% { transform: rotate(0); } 85%, 100% { transform: rotate(180deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero, .pulse, .hourglass, .cur { animation: none; }
+  .math-art .curve { animation: none; stroke-dashoffset: 0; }
+  .math-art .curve2, .term-body .l { animation: none; opacity: 1; width: auto; }
+  .math-art .dot { display: none; }
+}
+.tools button { color: var(--accent); }
+@media (max-width: 640px) { .term-body { min-height: 0; } }

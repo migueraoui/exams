@@ -55,10 +55,10 @@
 
   function fileLinks(v, emptyText) {
     var fs = files(v);
-    if (!fs.length) return '<span class="na">' + emptyText + "</span>";
+    if (!fs.length) return '<span class="na"><i class="pulse"></i>' + emptyText + "</span>";
     return fs.map(function (f, i) {
       return '<a href="' + esc(encodeURI(f.href)) + '" target="_blank" rel="noopener">' +
-        esc(f.label || (fs.length > 1 ? "الجزء " + (i + 1) : "تحميل")) + "</a>";
+        "✓ " + esc(f.label || (fs.length > 1 ? "الجزء " + (i + 1) : "متاح — تحميل")) + "</a>";
     }).join(" · ");
   }
 
@@ -90,6 +90,46 @@
       "</p>";
   }
 
+  /* ---------- Lively bits ---------- */
+  function daysUntil(d) {
+    if (!d) return null;
+    var t = new Date(d + "T00:00:00"); if (isNaN(t)) return null;
+    var now = new Date(); now.setHours(0, 0, 0, 0);
+    return Math.round((t - now) / 86400000);
+  }
+  function countdown(d) {
+    var n = daysUntil(d);
+    if (n === null || n < 0) return "";
+    var txt = n === 0 ? "الاختبار اليوم — بالتوفيق!"
+      : n === 1 ? "الاختبار غداً"
+      : n === 2 ? "الاختبار بعد يومين"
+      : "الاختبار بعد " + n + (n <= 10 ? " أيام" : " يوماً");
+    return '<span class="countdown">' + txt + "</span>";
+  }
+
+  function art(mod) {
+    if (mod === "info") {
+      return '<div class="term-art" aria-hidden="true" dir="ltr">' +
+        '<div class="term-bar"><i></i><i></i><i></i></div>' +
+        '<div class="term-body"><div class="l l1"><span class="p">&gt;</span> python exam.py</div>' +
+        '<div class="l l2">Loading<span class="dots"></span></div>' +
+        '<div class="l l3 ok" dir="rtl">✓ بالتوفيق للجميع</div><span class="cur"></span></div></div>';
+    }
+    return '<svg class="math-art" viewBox="0 0 220 120" aria-hidden="true">' +
+      '<path class="ax" d="M10 60H212M110 8V114"/>' +
+      '<path class="ax tick" d="M40 57v6M75 57v6M145 57v6M180 57v6M107 25h6M107 95h6"/>' +
+      '<path id="curve" class="curve" d="M10 60 C 27 15, 43 15, 60 60 S 93 105, 110 60 S 143 15, 160 60 S 193 105, 210 60"/>' +
+      '<path class="curve2" d="M30 112 Q 110 -40 190 112"/>' +
+      '<circle class="dot" r="4"><animateMotion dur="6s" repeatCount="indefinite" rotate="auto"><mpath href="#curve"/></animateMotion></circle>' +
+      '<text x="200" y="76">x</text><text x="116" y="16">y</text></svg>';
+  }
+
+  function hero(c, title, meta) {
+    return '<section class="hero">' +
+      '<div class="hero-text"><span class="kicker">' + esc(c.subject) + "</span>" +
+      "<h1>" + title + "</h1>" + '<p class="meta">' + meta + "</p></div>" + art(c.module) + "</section>";
+  }
+
   /* ---------- Views ---------- */
   function viewClass(year, cid) {
     var c = CLASSES[cid];
@@ -101,16 +141,15 @@
         '<table class="exams"><thead><tr><th>الاختبار</th><th>التاريخ</th><th>الموضوع</th><th>التصحيح</th></tr></thead><tbody>' +
         groups[t].map(function (e) {
           return "<tr>" +
-            '<td class="title"><a href="' + examHref(year.id, cid, e) + '">' + esc(e.title) + "</a></td>" +
-            '<td class="date" data-label="التاريخ">' + (e.date ? esc(fmtDate(e.date)) : "—") + "</td>" +
+            '<td class="title"><a href="' + examHref(year.id, cid, e) + '">' + esc(e.title) + ' <span class="go">←</span></a></td>' +
+            '<td class="date" data-label="التاريخ">' + (e.date ? esc(fmtDate(e.date)) + " " + countdown(e.date) : "—") + "</td>" +
             '<td data-label="الموضوع">' + fileLinks(e.subject, "لم يُنشر بعد") + "</td>" +
             '<td data-label="التصحيح">' + fileLinks(e.solution, "يُنشر قريباً") + "</td></tr>";
         }).join("") + "</tbody></table>";
     }).join("");
 
     document.title = c.stream + " — " + S.title;
-    return "<h1>" + esc(c.level) + " — " + esc(c.stream) + "</h1>" +
-      '<p class="meta">مادة ' + esc(c.subject) + " · السنة الدراسية " + esc(yearLabel(year.id)) + "</p>" +
+    return hero(c, esc(c.level) + " — " + esc(c.stream), "السنة الدراسية " + esc(yearLabel(year.id))) +
       (body || '<p class="empty">لا توجد اختبارات منشورة بعد. ستظهر هنا فور نشرها.</p>') +
       tools(c.stream);
   }
@@ -123,9 +162,9 @@
       var msg = isSol
         ? "لم يُنشر التصحيح بعد. سيكون متاحاً على هذه الصفحة بعد انتهاء الاختبار."
         : "لم يُنشر الموضوع بعد. سيكون متاحاً على هذه الصفحة بعد إجراء الاختبار.";
-      return '<section class="doc">' + h + '<p class="status">' + msg + "</p></section>";
+      return '<section class="doc wait">' + h + '<p class="status"><span class="hourglass" aria-hidden="true"></span>' + msg + "</p></section>";
     }
-    return '<section class="doc">' + h + '<div class="files">' + fs.map(function (f, i) {
+    return '<section class="doc ready">' + h + '<div class="files">' + fs.map(function (f, i) {
       var url = esc(encodeURI(f.href));
       var lbl = f.label || (fs.length > 1 ? "الجزء " + (i + 1) : "");
       return '<div class="file">' + (lbl ? '<span class="lbl">' + esc(lbl) + "</span>" : "") +
@@ -139,8 +178,8 @@
     document.title = exam.title + " — " + c.stream;
     var meta = [c.level + " — " + c.stream, "مادة " + c.subject];
     meta.push(exam.date ? fmtDate(exam.date) : yearLabel(year.id));
-    return "<h1>" + esc(exam.title) + "</h1>" +
-      '<p class="meta">' + meta.map(esc).join(" · ") + "</p>" +
+    return '<p class="back"><a href="' + href(year.id, cid) + '">\u200f→ العودة إلى كل اختبارات القسم</a></p>' +
+      hero(c, esc(exam.title), meta.map(esc).join(" · ") + (exam.date ? " " + countdown(exam.date) : "")) +
       docSection("subject", exam) + docSection("solution", exam) +
       (exam.note ? '<p class="note">' + esc(exam.note) + "</p>" : "") +
       tools(exam.title + " — " + c.stream);
@@ -200,7 +239,10 @@
       html = exam ? viewExam(year, p[1], exam) : notFound();
     }
 
-    if (year && CLASSES[p[1]]) mod = CLASSES[p[1]].module;
+    if (year && CLASSES[p[1]]) {
+      mod = CLASSES[p[1]].module;
+      document.documentElement.style.setProperty("--accent", CLASSES[p[1]].color);
+    }
     symbols(mod);
     app.innerHTML = '<div class="enter">' + html + "</div>";
     window.scrollTo(0, 0);
