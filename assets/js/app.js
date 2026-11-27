@@ -7,6 +7,7 @@
   S.classes.forEach(function (c) { CLASSES[c.id] = c; });
 
   var TERMS = { 1: "الفصل الأول", 2: "الفصل الثاني", 3: "الفصل الثالث" };
+  var IS_MOBILE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
   /* ---------- Helpers ---------- */
   function esc(s) {
@@ -15,7 +16,7 @@
     });
   }
   // Year shown left-to-right everywhere: «2026 / 2027» (2026 first, on the left)
-  function yearLabel(id) { var y = String(id).split("-"); return "\u2066" + y[0] + "\u00a0/\u00a0" + y[1] + "\u2069"; }
+  function yearLabel(id) { var y = String(id).split("-"); return "⁦" + y[0] + " / " + y[1] + "⁩"; }
   function getYear(id) { return S.years.filter(function (y) { return y.id === id; })[0]; }
   function href() { return "#/" + Array.prototype.map.call(arguments, encodeURIComponent).join("/"); }
 
@@ -53,22 +54,30 @@
     } catch (e) { return d; }
   }
 
-  function fileLinks(v, emptyText) {
-    var fs = files(v);
-    if (!fs.length) return '<span class="na"><i class="pulse"></i>' + emptyText + "</span>";
-    return fs.map(function (f, i) {
-      return '<a href="' + esc(encodeURI(f.href)) + '" target="_blank" rel="noopener">' +
-        "✓ " + esc(f.label || (fs.length > 1 ? "الجزء " + (i + 1) : "متاح — تحميل")) + "</a>";
-    }).join(" · ");
+  function daysUntil(d) {
+    if (!d) return null;
+    var t = new Date(d + "T00:00:00"); if (isNaN(t)) return null;
+    var now = new Date(); now.setHours(0, 0, 0, 0);
+    return Math.round((t - now) / 86400000);
+  }
+  function countdown(d) {
+    var n = daysUntil(d);
+    if (n === null || n < 0) return "";
+    var txt = n === 0 ? "الاختبار اليوم — بالتوفيق!"
+      : n === 1 ? "الاختبار غداً"
+      : n === 2 ? "الاختبار بعد يومين"
+      : "الاختبار بعد " + n + (n <= 10 ? " أيام" : " يوماً");
+    return '<span class="countdown"><i class="fa-solid fa-hourglass-half"></i>' + txt + "</span>";
   }
 
+  /* ---------- Toast / copy / share ---------- */
   var toastTimer;
   function toast(msg) {
     var t = document.getElementById("toast");
-    t.textContent = msg;
+    t.innerHTML = '<i class="fa-solid fa-circle-check"></i>' + esc(msg);
     t.classList.add("show");
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { t.classList.remove("show"); }, 2000);
+    toastTimer = setTimeout(function () { t.classList.remove("show"); }, 2200);
   }
 
   function copyLink(url) {
@@ -84,139 +93,165 @@
     else fallback();
   }
 
-  function tools(title) {
-    return '<p class="tools"><button type="button" data-copy>نسخ رابط الصفحة</button>' +
-      (navigator.share ? '<span class="sep">|</span><button type="button" data-share="' + esc(title) + '">مشاركة</button>' : "") +
-      "</p>";
+  var shareTitle = "";
+  function nativeShare() {
+    if (navigator.share) {
+      navigator.share({ title: shareTitle, text: shareTitle, url: location.href }).catch(function () {});
+    } else {
+      var s = document.getElementById("share");
+      if (s) s.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
   }
 
-  /* ---------- Lively bits ---------- */
-  function daysUntil(d) {
-    if (!d) return null;
-    var t = new Date(d + "T00:00:00"); if (isNaN(t)) return null;
-    var now = new Date(); now.setHours(0, 0, 0, 0);
-    return Math.round((t - now) / 86400000);
+  function shareBox(title) {
+    shareTitle = title;
+    var url = location.href;
+    var u = encodeURIComponent(url);
+    var msg = encodeURIComponent(title + "\n" + url);
+    var b = "";
+    b += '<a class="sb wa" href="https://wa.me/?text=' + msg + '" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i>واتساب</a>';
+    b += '<a class="sb fb" href="https://www.facebook.com/sharer/sharer.php?u=' + u + '" target="_blank" rel="noopener"><i class="fa-brands fa-facebook-f"></i>فيسبوك</a>';
+    if (IS_MOBILE) b += '<a class="sb ms" href="fb-messenger://share/?link=' + u + '"><i class="fa-brands fa-facebook-messenger"></i>ماسنجر</a>';
+    b += '<a class="sb tg" href="https://t.me/share/url?url=' + u + "&text=" + encodeURIComponent(title) + '" target="_blank" rel="noopener"><i class="fa-brands fa-telegram"></i>تيليغرام</a>';
+    b += '<button type="button" class="sb cp" data-copy><i class="fa-solid fa-link"></i>نسخ الرابط</button>';
+    if (navigator.share) b += '<button type="button" class="sb more" data-share><i class="fa-solid fa-share-nodes"></i>المزيد</button>';
+
+    return '<section class="share" id="share">' +
+      '<div class="share-head"><span class="ic"><i class="fa-solid fa-share-nodes"></i></span>' +
+      "<div><h2>شارك الرابط مع زملائك</h2><p>أرسل هذه الصفحة لزملائك في القسم بنقرة واحدة</p></div></div>" +
+      '<div class="share-btns">' + b + "</div>" +
+      '<div class="share-url"><input type="text" readonly value="' + esc(url) + '" aria-label="رابط الصفحة">' +
+      '<button type="button" data-copy>نسخ</button></div></section>';
   }
-  function countdown(d) {
-    var n = daysUntil(d);
-    if (n === null || n < 0) return "";
-    var txt = n === 0 ? "الاختبار اليوم — بالتوفيق!"
-      : n === 1 ? "الاختبار غداً"
-      : n === 2 ? "الاختبار بعد يومين"
-      : "الاختبار بعد " + n + (n <= 10 ? " أيام" : " يوماً");
-    return '<span class="countdown">' + txt + "</span>";
+
+  /* ---------- Hero ---------- */
+  var SYMBOLS = {
+    math: ["∑", "π", "√", "∫", "∞", "Δ", "÷", "×", "≈", "θ", "f(x)", "x²", "%", "≠", "α", "±", "λ", "∈"],
+    info: ["</>", "{ }", "01", "10", "#", "if", "()", ";", "[ ]", "=>", "&&", "0x", "≠", "<>", "1", "0", "fn", "//"]
+  };
+  function symbols(mod) {
+    var set = SYMBOLS[mod] || SYMBOLS.math;
+    var n = window.innerWidth < 640 ? 12 : 20, h = "";
+    for (var i = 0; i < n; i++) {
+      h += '<span style="left:' + (Math.random() * 94).toFixed(1) + "%;font-size:" + (16 + Math.round(Math.random() * 26)) + "px;" +
+        "animation-duration:" + (12 + Math.random() * 14).toFixed(1) + "s;" +
+        "animation-delay:-" + (Math.random() * 20).toFixed(1) + "s;" +
+        "--r:" + (Math.random() < .5 ? -1 : 1) * (20 + Math.round(Math.random() * 50)) + 'deg">' +
+        esc(set[i % set.length]) + "</span>";
+    }
+    return '<div class="hero-sym" aria-hidden="true">' + h + "</div>";
   }
 
   function art(mod) {
     if (mod === "info") {
-      return '<div class="term-art" aria-hidden="true" dir="ltr">' +
+      return '<div class="art term-art" aria-hidden="true" dir="ltr">' +
         '<div class="term-bar"><i></i><i></i><i></i></div>' +
         '<div class="term-body"><div class="l l1"><span class="p">&gt;</span> python exam.py</div>' +
         '<div class="l l2">Loading<span class="dots"></span></div>' +
-        '<div class="l l3 ok" dir="rtl">✓ بالتوفيق للجميع</div><span class="cur"></span></div></div>';
+        '<div class="l l3" dir="rtl">✓ بالتوفيق للجميع</div><span class="cur"></span></div></div>';
     }
-    return '<svg class="math-art" viewBox="0 0 220 120" aria-hidden="true">' +
-      '<path class="ax" d="M10 60H212M110 8V114"/>' +
-      '<path class="ax tick" d="M40 57v6M75 57v6M145 57v6M180 57v6M107 25h6M107 95h6"/>' +
+    return '<svg class="art math-art" viewBox="0 0 220 120" aria-hidden="true">' +
+      '<path class="ax" d="M10 60H212M110 8V114M40 57v6M75 57v6M145 57v6M180 57v6M107 25h6M107 95h6"/>' +
       '<path id="curve" class="curve" d="M10 60 C 27 15, 43 15, 60 60 S 93 105, 110 60 S 143 15, 160 60 S 193 105, 210 60"/>' +
       '<path class="curve2" d="M30 112 Q 110 -40 190 112"/>' +
-      '<circle class="dot" r="4"><animateMotion dur="6s" repeatCount="indefinite" rotate="auto"><mpath href="#curve"/></animateMotion></circle>' +
-      '<text x="200" y="76">x</text><text x="116" y="16">y</text></svg>';
+      '<circle class="dot" r="5"><animateMotion dur="6s" repeatCount="indefinite"><mpath href="#curve"/></animateMotion></circle>' +
+      '<text x="200" y="78">x</text><text x="117" y="16">y</text></svg>';
   }
 
-  function hero(c, title, meta) {
-    return '<section class="hero">' +
-      '<div class="hero-text"><span class="kicker">' + esc(c.subject) + "</span>" +
-      "<h1>" + title + "</h1>" + '<p class="meta">' + meta + "</p></div>" + art(c.module) + "</section>";
+  function hero(c, opts) {
+    return '<section class="hero">' + symbols(c.module) +
+      '<div class="hero-top"><span class="site-name"><span class="logo">' + (c.module === "info" ? "&lt;/&gt;" : "∑") + "</span>" + esc(S.title) + "</span>" +
+      '<button type="button" class="pill-btn" data-share><i class="fa-solid fa-share-nodes"></i>مشاركة</button></div>' +
+      '<div class="hero-body"><div class="hero-text">' +
+      '<div class="tags">' + opts.tags.map(function (t, i) { return '<span class="tag' + (i === 0 ? " light" : "") + '">' + t + "</span>"; }).join("") + "</div>" +
+      "<h1>" + opts.title + "</h1>" +
+      '<p class="sub">' + opts.sub + "</p>" + (opts.extra || "") +
+      "</div>" + art(c.module) + "</div></section>";
   }
 
   /* ---------- Views ---------- */
+  function status(kind, v) {
+    var ok = files(v).length > 0;
+    var name = kind === "solution" ? "التصحيح" : "الموضوع";
+    return '<div class="st ' + (ok ? "ok" : "wait") + '"><i class="fa-solid ' + (ok ? "fa-check" : "fa-hourglass-half") + '"></i>' +
+      name + ": " + (ok ? "متاح" : (kind === "solution" ? "يُنشر قريباً" : "لم يُنشر بعد")) + "</div>";
+  }
+
   function viewClass(year, cid) {
     var c = CLASSES[cid];
-    var groups = {};
-    (year.classes[cid] || []).forEach(function (e) { var t = e.term || 0; (groups[t] = groups[t] || []).push(e); });
+    var exams = (year.classes[cid] || []).slice().sort(function (a, b) { return (a.term || 0) - (b.term || 0); });
+    var done = exams.filter(function (e) { return files(e.solution).length; }).length;
+    var pct = exams.length ? Math.round(done / exams.length * 100) : 0;
 
-    var body = Object.keys(groups).sort().map(function (t) {
-      return '<h2 class="term">' + esc(TERMS[t] || "أخرى") + "</h2>" +
-        '<table class="exams"><thead><tr><th>الاختبار</th><th>التاريخ</th><th>الموضوع</th><th>التصحيح</th></tr></thead><tbody>' +
-        groups[t].map(function (e) {
-          return "<tr>" +
-            '<td class="title"><a href="' + examHref(year.id, cid, e) + '">' + esc(e.title) + ' <span class="go">←</span></a></td>' +
-            '<td class="date" data-label="التاريخ">' + (e.date ? esc(fmtDate(e.date)) + " " + countdown(e.date) : "—") + "</td>" +
-            '<td data-label="الموضوع">' + fileLinks(e.subject, "لم يُنشر بعد") + "</td>" +
-            '<td data-label="التصحيح">' + fileLinks(e.solution, "يُنشر قريباً") + "</td></tr>";
-        }).join("") + "</tbody></table>";
+    var cards = exams.map(function (e) {
+      return '<a class="exam-card" href="' + examHref(year.id, cid, e) + '">' +
+        '<div class="ec-top"><span class="ec-term">' + esc(TERMS[e.term] || "") + "</span>" +
+        (e.date ? '<span class="ec-date">' + esc(fmtDate(e.date)) + "</span>" : "") + "</div>" +
+        "<h3>" + esc(e.title) + "</h3>" +
+        (countdown(e.date) ? '<div style="margin:-4px 0 10px">' + countdown(e.date) + "</div>" : "") +
+        '<div class="ec-status">' + status("subject", e.subject) + status("solution", e.solution) + "</div>" +
+        '<div class="ec-go">افتح الاختبار <i class="fa-solid fa-arrow-left"></i></div></a>';
     }).join("");
 
     document.title = c.stream + " — " + S.title;
-    return hero(c, esc(c.level) + " — " + esc(c.stream), "السنة الدراسية " + esc(yearLabel(year.id))) +
-      (body || '<p class="empty">لا توجد اختبارات منشورة بعد. ستظهر هنا فور نشرها.</p>') +
-      tools(c.stream);
+    shareTitle = "مواضيع وتصحيحات " + c.stream + " — " + c.subject;
+    return hero(c, {
+        tags: [esc(c.subject), "السنة الدراسية " + esc(yearLabel(year.id))],
+        title: esc(c.stream),
+        sub: esc(c.level),
+        extra: exams.length ? '<div class="progress"><div class="lbl"><span>التصحيحات المنشورة</span><span>' + done + " / " + exams.length + "</span></div>" +
+          '<div class="bar"><span style="--p:' + pct + '%"></span></div></div>' : ""
+      }) +
+      '<h2 class="section-title"><i class="fa-solid fa-file-pen"></i>الاختبارات</h2>' +
+      (cards ? '<div class="cards">' + cards + "</div>"
+        : '<div class="empty"><i class="fa-regular fa-folder-open fa-solid"></i><h3>لا توجد اختبارات بعد</h3><p>ستظهر هنا فور نشرها.</p></div>') +
+      shareBox(shareTitle);
   }
 
-  function docSection(kind, exam) {
+  function docCard(kind, exam) {
     var fs = files(exam[kind]);
     var isSol = kind === "solution";
-    var h = "<h2>" + (isSol ? "التصحيح النموذجي" : "موضوع الاختبار") + "</h2>";
+    var title = isSol ? "التصحيح النموذجي" : "موضوع الاختبار";
     if (!fs.length) {
       var msg = isSol
-        ? "لم يُنشر التصحيح بعد. سيكون متاحاً على هذه الصفحة بعد انتهاء الاختبار."
-        : "لم يُنشر الموضوع بعد. سيكون متاحاً على هذه الصفحة بعد إجراء الاختبار.";
-      return '<section class="doc wait">' + h + '<p class="status"><span class="hourglass" aria-hidden="true"></span>' + msg + "</p></section>";
+        ? "سيُنشر التصحيح النموذجي هنا بعد انتهاء الاختبار. عُد إلى هذه الصفحة لاحقاً."
+        : "سيُنشر موضوع الاختبار هنا بعد إجرائه.";
+      return '<section class="doc-card wait"><div class="dc-head"><span class="dc-icon"><i class="fa-solid fa-hourglass-half"></i></span>' +
+        "<div><h2>" + title + '</h2><span class="badge wait"><span class="dot"></span>قريباً</span></div></div>' +
+        "<p>" + msg + '</p><div class="loader"></div></section>';
     }
-    return '<section class="doc ready">' + h + '<div class="files">' + fs.map(function (f, i) {
+    var rows = fs.map(function (f, i) {
       var url = esc(encodeURI(f.href));
       var lbl = f.label || (fs.length > 1 ? "الجزء " + (i + 1) : "");
-      return '<div class="file">' + (lbl ? '<span class="lbl">' + esc(lbl) + "</span>" : "") +
-        '<a class="btn primary" href="' + url + '" target="_blank" rel="noopener">عرض</a>' +
-        '<a class="btn" href="' + url + '" download>تحميل</a></div>';
-    }).join("") + "</div></section>";
+      return (lbl ? '<div class="file-lbl">' + esc(lbl) + "</div>" : "") +
+        '<div class="file-row"><a class="btn primary" href="' + url + '" target="_blank" rel="noopener"><i class="fa-solid fa-eye"></i>عرض</a>' +
+        '<a class="btn ghost" href="' + url + '" download><i class="fa-solid fa-download"></i>تحميل</a></div>';
+    }).join("");
+    return '<section class="doc-card ok"><div class="dc-head"><span class="dc-icon"><i class="fa-solid ' + (isSol ? "fa-square-check" : "fa-file-lines") + '"></i></span>' +
+      "<div><h2>" + title + '</h2><span class="badge ok"><i class="fa-solid fa-check"></i>متاح الآن</span></div></div>' +
+      '<div class="files">' + rows + "</div></section>";
   }
 
   function viewExam(year, cid, exam) {
     var c = CLASSES[cid];
     document.title = exam.title + " — " + c.stream;
-    var meta = [c.level + " — " + c.stream, "مادة " + c.subject];
-    meta.push(exam.date ? fmtDate(exam.date) : yearLabel(year.id));
-    return '<p class="back"><a href="' + href(year.id, cid) + '">العودة إلى كل اختبارات القسم</a></p>' +
-      hero(c, esc(exam.title), meta.map(esc).join(" · ") + (exam.date ? " " + countdown(exam.date) : "")) +
-      docSection("subject", exam) + docSection("solution", exam) +
-      (exam.note ? '<p class="note">' + esc(exam.note) + "</p>" : "") +
-      tools(exam.title + " — " + c.stream);
+    shareTitle = exam.title + " — " + c.stream + " (" + c.subject + ")";
+    return '<a class="back" href="' + href(year.id, cid) + '"><i class="fa-solid fa-arrow-right"></i>كل اختبارات القسم</a>' +
+      hero(c, {
+        tags: [esc(c.subject), esc(TERMS[exam.term] || ""), exam.date ? esc(fmtDate(exam.date)) : "السنة الدراسية " + esc(yearLabel(year.id))],
+        title: esc(exam.title),
+        sub: esc(c.level) + " — " + esc(c.stream),
+        extra: countdown(exam.date) ? "<div>" + countdown(exam.date) + "</div>" : ""
+      }) +
+      '<div class="docs">' + docCard("subject", exam) + docCard("solution", exam) + "</div>" +
+      (exam.note ? '<div class="note"><i class="fa-solid fa-circle-info"></i><span>' + esc(exam.note) + "</span></div>" : "") +
+      shareBox(shareTitle);
   }
 
   function notFound() {
     document.title = "الصفحة غير موجودة — " + S.title;
-    return "<h1>الصفحة غير موجودة</h1>" +
-      '<p class="lead">الرابط غير صحيح. تأكّد من الرابط الذي أرسله لك الأستاذ.</p>';
-  }
-
-  /* ---------- Floating symbols background ---------- */
-  var SYMBOLS = {
-    math: ["∑", "π", "√", "∫", "∞", "Δ", "÷", "×", "≈", "θ", "f(x)", "x²", "%", "≠", "α", "±", "λ", "∈"],
-    info: ["</>", "{ }", "01", "10", "#", "if", "()", ";", "[ ]", "=>", "&&", "0x", "≠", "<>", "1", "0", "fn", "//"]
-  };
-  var bg = document.createElement("div");
-  bg.className = "bg-sym";
-  bg.setAttribute("aria-hidden", "true");
-  document.body.insertBefore(bg, document.body.firstChild);
-  var bgMod = null;
-
-  function symbols(mod) {
-    if (mod === bgMod) return;
-    bgMod = mod;
-    var set = SYMBOLS[mod] || SYMBOLS.math;
-    var n = window.innerWidth < 640 ? 14 : 24;
-    var h = "";
-    for (var i = 0; i < n; i++) {
-      var size = 18 + Math.round(Math.random() * 30);
-      h += '<span style="left:' + (Math.random() * 96).toFixed(1) + "%;font-size:" + size + "px;" +
-        "animation-duration:" + (22 + Math.random() * 26).toFixed(1) + "s;" +
-        "animation-delay:-" + (Math.random() * 40).toFixed(1) + "s;" +
-        "--r:" + (Math.random() < .5 ? -1 : 1) * (20 + Math.round(Math.random() * 40)) + 'deg">' +
-        esc(set[i % set.length]) + "</span>";
-    }
-    bg.innerHTML = h;
+    return '<section class="lost"><div class="big">∅</div><h1>الصفحة غير موجودة</h1>' +
+      "<p>الرابط غير صحيح. تأكّد من الرابط الذي أرسله لك الأستاذ.</p></section>";
   }
 
   /* ---------- Router ---------- */
@@ -229,7 +264,7 @@
   function render() {
     var p = parse();
     var year = getYear(p[0]);
-    var html, mod = "math";
+    var html;
 
     // No home page: only a full class link (year/class/...) shows anything.
     if (!year || !p[1] || !CLASSES[p[1]] || !year.classes[p[1]]) html = notFound();
@@ -239,27 +274,26 @@
       html = exam ? viewExam(year, p[1], exam) : notFound();
     }
 
-    if (year && CLASSES[p[1]]) {
-      mod = CLASSES[p[1]].module;
-      document.documentElement.style.setProperty("--accent", CLASSES[p[1]].color);
-    }
-    symbols(mod);
+    var c = year && CLASSES[p[1]];
+    var root = document.documentElement.style;
+    root.setProperty("--accent", c ? c.color : "#2563eb");
+    root.setProperty("--accent-2", c ? (c.color2 || c.color) : "#7c3aed");
+
     app.innerHTML = '<div class="enter">' + html + "</div>";
     window.scrollTo(0, 0);
   }
 
   /* ---------- Init ---------- */
-  document.getElementById("site-title").textContent = S.title;
-  document.getElementById("site-sub").textContent = [S.teacher, S.school].filter(Boolean).join(" — ");
   document.getElementById("footer-text").textContent =
-    [S.teacher, S.school].filter(Boolean).join(" — ") || ("السنة الدراسية " + yearLabel(S.currentYear));
+    [S.teacher, S.school].filter(Boolean).concat(["السنة الدراسية " + yearLabel(S.currentYear)]).join(" · ");
 
   app.addEventListener("click", function (e) {
     var b = e.target.closest("button");
     if (!b) return;
     if (b.hasAttribute("data-copy")) copyLink(location.href);
-    if (b.hasAttribute("data-share")) navigator.share({ title: b.getAttribute("data-share"), url: location.href }).catch(function () {});
+    if (b.hasAttribute("data-share")) nativeShare();
   });
+  app.addEventListener("focusin", function (e) { if (e.target.matches(".share-url input")) e.target.select(); });
 
   window.addEventListener("hashchange", render);
   render();
