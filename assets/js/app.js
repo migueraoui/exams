@@ -122,7 +122,7 @@
   function hero(c, opts) {
     return '<section class="hero">' + symbols(c.module) +
       '<div class="hero-top"><span class="site-name"><span class="logo">' + (c.module === "info" ? "&lt;/&gt;" : "∑") + "</span></span>" +
-      '<button type="button" class="pill-btn icon" data-share aria-label="مشاركة الرابط" title="مشاركة الرابط"><i class="fa-solid fa-share-nodes"></i></button></div>' +
+      '<button type="button" class="pill-btn" data-share><i class="fa-solid fa-share-nodes"></i>مشاركة</button></div>' +
       '<div class="hero-body"><div class="hero-text">' +
       '<div class="tags">' + opts.tags.map(function (t, i) { return '<span class="tag' + (i === 0 ? " light" : "") + '">' + t + "</span>"; }).join("") + "</div>" +
       "<h1>" + opts.title + "</h1>" +
