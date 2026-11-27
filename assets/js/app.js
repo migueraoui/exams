@@ -121,12 +121,12 @@
 
   function hero(c, opts) {
     return '<section class="hero">' + symbols(c.module) +
-      '<div class="hero-top"><span class="site-name"><span class="logo">' + (c.module === "info" ? "&lt;/&gt;" : "∑") + "</span>" + esc(S.title) + "</span>" +
-      '<button type="button" class="pill-btn" data-share><i class="fa-solid fa-share-nodes"></i>مشاركة الرابط</button></div>' +
+      '<div class="hero-top"><span class="site-name"><span class="logo">' + (c.module === "info" ? "&lt;/&gt;" : "∑") + "</span></span>" +
+      '<button type="button" class="pill-btn icon" data-share aria-label="مشاركة الرابط" title="مشاركة الرابط"><i class="fa-solid fa-share-nodes"></i></button></div>' +
       '<div class="hero-body"><div class="hero-text">' +
       '<div class="tags">' + opts.tags.map(function (t, i) { return '<span class="tag' + (i === 0 ? " light" : "") + '">' + t + "</span>"; }).join("") + "</div>" +
       "<h1>" + opts.title + "</h1>" +
-      '<p class="sub">' + opts.sub + "</p>" + (opts.extra || "") +
+      (opts.sub ? '<p class="sub">' + opts.sub + "</p>" : "") + (opts.extra || "") +
       "</div></div></section>";
   }
 
@@ -135,7 +135,7 @@
     var ok = files(v).length > 0;
     var name = kind === "solution" ? "التصحيح" : "الموضوع";
     return '<div class="st ' + (ok ? "ok" : "wait") + '"><i class="fa-solid ' + (ok ? "fa-check" : "fa-hourglass-half") + '"></i>' +
-      name + ": " + (ok ? "متاح" : (kind === "solution" ? "يُنشر قريباً" : "لم يُنشر بعد")) + "</div>";
+      name + "</div>";
   }
 
   function viewClass(year, cid) {
@@ -151,21 +151,21 @@
         "<h3>" + esc(e.title) + "</h3>" +
         (countdown(e.date) ? '<div style="margin:-4px 0 10px">' + countdown(e.date) + "</div>" : "") +
         '<div class="ec-status">' + status("subject", e.subject) + status("solution", e.solution) + "</div>" +
-        '<div class="ec-go">افتح الاختبار <i class="fa-solid fa-arrow-left"></i></div></a>';
+        '<div class="ec-go"><i class="fa-solid fa-arrow-left"></i></div></a>';
     }).join("");
 
     document.title = c.stream + " — " + S.title;
     shareTitle = "مواضيع وتصحيحات " + c.stream + " — " + c.subject;
     return hero(c, {
-        tags: [esc(c.subject), "السنة الدراسية " + esc(yearLabel(year.id))],
+        tags: [esc(c.subject), esc(yearLabel(year.id))],
         title: esc(c.stream),
         sub: esc(c.level),
-        extra: exams.length ? '<div class="progress"><div class="lbl"><span>التصحيحات المنشورة</span><span>' + done + " / " + exams.length + "</span></div>" +
+        extra: exams.length ? '<div class="progress"><div class="lbl"><span><i class="fa-solid fa-check"></i></span><span>' + done + " / " + exams.length + "</span></div>" +
           '<div class="bar"><span style="--p:' + pct + '%"></span></div></div>' : ""
       }) +
-      '<h2 class="section-title"><i class="fa-solid fa-file-pen"></i>الاختبارات</h2>' +
+      '<div class="spacer"></div>' +
       (cards ? '<div class="cards">' + cards + "</div>"
-        : '<div class="empty"><i class="fa-solid fa-folder-open"></i><h3>لا توجد اختبارات بعد</h3><p>ستظهر هنا فور نشرها.</p></div>');
+        : '<div class="empty"><i class="fa-solid fa-folder-open"></i><h3>قريباً</h3></div>');
   }
 
   function docCard(kind, exam) {
@@ -173,12 +173,9 @@
     var isSol = kind === "solution";
     var title = isSol ? "التصحيح النموذجي" : "موضوع الاختبار";
     if (!fs.length) {
-      var msg = isSol
-        ? "سيُنشر التصحيح النموذجي هنا بعد انتهاء الاختبار. عُد إلى هذه الصفحة لاحقاً."
-        : "سيُنشر موضوع الاختبار هنا بعد إجرائه.";
       return '<section class="doc-card wait"><div class="dc-head"><span class="dc-icon"><i class="fa-solid fa-hourglass-half"></i></span>' +
         "<div><h2>" + title + '</h2><span class="badge wait"><span class="dot"></span>قريباً</span></div></div>' +
-        "<p>" + msg + '</p><div class="loader"></div></section>';
+        '<div class="loader"></div></section>';
     }
     var rows = fs.map(function (f, i) {
       var url = esc(encodeURI(f.href));
@@ -188,7 +185,7 @@
         '<a class="btn ghost" href="' + url + '" download><i class="fa-solid fa-download"></i>تحميل</a></div>';
     }).join("");
     return '<section class="doc-card ok"><div class="dc-head"><span class="dc-icon"><i class="fa-solid ' + (isSol ? "fa-square-check" : "fa-file-lines") + '"></i></span>' +
-      "<div><h2>" + title + '</h2><span class="badge ok"><i class="fa-solid fa-check"></i>متاح الآن</span></div></div>' +
+      "<div><h2>" + title + '</h2><span class="badge ok"><i class="fa-solid fa-check"></i>متاح</span></div></div>' +
       '<div class="files">' + rows + "</div></section>";
   }
 
@@ -196,11 +193,11 @@
     var c = CLASSES[cid];
     document.title = exam.title + " — " + c.stream;
     shareTitle = exam.title + " — " + c.stream + " (" + c.subject + ")";
-    return '<a class="back" href="' + href(year.id, cid) + '"><i class="fa-solid fa-arrow-right"></i>كل اختبارات القسم</a>' +
+    return '<a class="back" href="' + href(year.id, cid) + '"><i class="fa-solid fa-arrow-right"></i>رجوع</a>' +
       hero(c, {
-        tags: [esc(c.subject), esc(TERMS[exam.term] || ""), exam.date ? esc(fmtDate(exam.date)) : "السنة الدراسية " + esc(yearLabel(year.id))],
+        tags: [esc(c.subject), esc(TERMS[exam.term] || "")].concat(exam.date ? [esc(fmtDate(exam.date))] : []),
         title: esc(exam.title),
-        sub: esc(c.level) + " — " + esc(c.stream),
+        sub: esc(c.stream),
         extra: countdown(exam.date) ? "<div>" + countdown(exam.date) + "</div>" : ""
       }) +
       '<div class="docs">' + docCard("subject", exam) + docCard("solution", exam) + "</div>" +
@@ -209,8 +206,7 @@
 
   function notFound() {
     document.title = "الصفحة غير موجودة — " + S.title;
-    return '<section class="lost"><div class="big">∅</div><h1>الصفحة غير موجودة</h1>' +
-      "<p>الرابط غير صحيح. تأكّد من الرابط الذي أرسله لك الأستاذ.</p></section>";
+    return '<section class="lost"><div class="big">∅</div><h1>الرابط غير صحيح</h1></section>';
   }
 
   /* ---------- Router ---------- */
@@ -244,7 +240,7 @@
 
   /* ---------- Init ---------- */
   document.getElementById("footer-text").textContent =
-    [S.teacher, S.school].filter(Boolean).concat(["السنة الدراسية " + yearLabel(S.currentYear)]).join(" · ");
+    [S.teacher, S.school].filter(Boolean).concat([yearLabel(S.currentYear)]).join(" · ");
 
   app.addEventListener("click", function (e) {
     var b = e.target.closest("button");
